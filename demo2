@@ -1,0 +1,74 @@
+__bash_completion_demo2() {
+	#================ Put Your Settings Here ================
+	local option_bool=( "-b" "--bool" )
+	local option_file=( "-f" "--file" )
+	local option_files=( "--files" )
+	local option_argument=( "-1" "--one-argument" )
+	local option_arguments=( "-2" "--some-arguments" )
+
+	local argument_list_oneargument=( "a" "b" "c" )
+	local argument_list_somearguments=( "A" "B" "C" )
+	#========================================================
+
+
+
+	#================ Bash Complete Magic ================
+	local word="${COMP_WORDS[$COMP_CWORD-1]}"
+	local option=""
+
+	if [ ! -z "${action_list}" ]; then
+		if [ $COMP_CWORD -eq 1 ]; then
+			COMPREPLY=( $(compgen -W "${action_list[*]}" -- "${COMP_WORDS[$COMP_CWORD]}") )
+			return
+		fi
+
+		local -n option_bool="option_bool_${COMP_WORDS[1]}"
+		local -n option_file="option_file_${COMP_WORDS[1]}"
+		local -n option_files="option_files_${COMP_WORDS[1]}"
+		local -n option_argument="option_argument_${COMP_WORDS[1]}"
+		local -n option_arguments="option_arguments_${COMP_WORDS[1]}"
+	fi
+
+	for option in "${option_file[@]}"; do
+		if [ "$word" = "$option" ]; then
+			COMPREPLY=( $(compgen -f -- "${COMP_WORDS[$COMP_CWORD]}") )
+			return
+		fi
+	done
+
+	for option in "${option_argument[@]}"; do
+		if [ "$word" = "$option" ]; then
+			local -n argument_list="argument_list_${option//[!0-9a-zA-Z]}"
+			COMPREPLY=( $(compgen -W "${argument_list[*]}" -- "${COMP_WORDS[$COMP_CWORD]}") )
+			return
+		fi
+	done
+
+	for ((i=$COMP_CWORD; i>0; --i)); do
+		word="${COMP_WORDS[$i]}"
+
+		[ "${word:0:1}" != "-" ] && continue
+
+		for option in "${option_files[@]}"; do
+			if [ "$word" = "$option" ]; then
+				COMPREPLY=( $(compgen -f -- "${COMP_WORDS[$COMP_CWORD]}") )
+				return
+			fi
+		done
+
+		for option in "${option_arguments[@]}"; do
+			if [ "$word" = "$option" ]; then
+				local -n argument_list="argument_list_${option//[!0-9a-zA-Z]}"
+				COMPREPLY=( $(compgen -W "${argument_list[*]}" -- "${COMP_WORDS[$COMP_CWORD]}") )
+				return
+			fi
+		done
+
+		break
+	done
+
+	COMPREPLY=( $(compgen -W "${option_bool[*]} ${option_file[*]} ${option_argument[*]} ${option_files[*]} ${option_arguments[*]}" -- "${COMP_WORDS[$COMP_CWORD]}") )
+	#===============================================
+}
+
+complete -o filenames -F __bash_completion_demo2 $(basename ${BASH_SOURCE[0]})
